@@ -10,38 +10,38 @@ At small scale, changing metadata or ACLs on S3 objects is a script problem: lis
 
 Multi-Region Access Points (MRAPs) solve a different but related problem: applications that need to read/write S3 data across multiple regions without hardcoding a bucket-region pairing into every client. An MRAP presents a single global endpoint that routes requests to the closest or most appropriate underlying bucket based on latency, with S3 Cross-Region Replication (CRR) keeping the underlying regional buckets in sync. This matters enormously for global migration engagements where a customer wants active-active resilience across, say, `ap-south-1` and `eu-west-1` without their application code knowing which region it's actually talking to.
 
-Together, these two features answer the two hardest S3-at-scale questions ProServe gets asked: "how do I fix metadata on everything I already have" and "how do I make what I have resilient across regions without a rewrite."
+Together, these two features answer the two hardest S3-at-scale questions cloud consultants get asked: "how do I fix metadata on everything I already have" and "how do I make what I have resilient across regions without a rewrite."
 
 ---
 
 ## 🏗️ Architecture Snapshot
 
 ```
-┌─────────────────────────────────────────────┐
+┌───────────────────────────────────────┐
 │  S3 Batch Operations                                       │
 │                                                              │
 │  S3 Inventory report (CSV/Parquet manifest, millions of rows)│
 │              │                                               │
 │              ▼                                               │
-│  ┌──────────────────────┐                                    │
+│  ┌────────────────┐                                    │
 │  │  Batch Job          │  --> Retag / Restore / Copy / Lambda │
 │  │  (parallel workers) │                                    │
-│  └──────────────────────┘                                    │
+│  └────────────────┘                                    │
 │              │                                               │
 │              ▼                                               │
 │   Completion report (success/failure per object)              │
-└─────────────────────────────────────────────┘
+└───────────────────────────────────────┘
 
-┌─────────────────────────────────────────────┐
+┌───────────────────────────────────────┐
 │  Multi-Region Access Point (MRAP)                           │
 │                                                              │
 │   Application ──▶  mrap-alias.accesspoint.s3-global.amazonaws.com│
 │                              │ (routes by latency/policy)   │
-│                ┌────────────┼─────────────┐              │
+│                ┌──────────▼──────────────┐              │
 │                ▼                          ▼              │
 │     Bucket (ap-south-1)         Bucket (eu-west-1)             │
-│            ▲─────────────── CRR ──────────────▼                     │
-└─────────────────────────────────────────────┘
+│            ▲─────────────── CRR ───────────────▼                     │
+└───────────────────────────────────────┘
 ```
 
 ---
