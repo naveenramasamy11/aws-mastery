@@ -6,7 +6,7 @@
 
 ## 📖 Concept
 
-Every ProServe migration engagement eventually hits the same moment: a customer asks "which of our resources are reachable from outside our AWS Organization?" and nobody has a confident answer. IAM policies, S3 bucket policies, KMS key policies, Secrets Manager resource policies, SQS queue policies, Lambda resource policies, and IAM role trust policies all grant cross-account access independently, and each one is a place where "just add my account for testing" silently becomes permanent. IAM Access Analyzer exists to close that gap by continuously reasoning over every resource-based policy in an account or organization and flagging any that grant access to a principal outside a defined "zone of trust."
+Every large-scale migration engagement eventually hits the same moment: a customer asks "which of our resources are reachable from outside our AWS Organization?" and nobody has a confident answer. IAM policies, S3 bucket policies, KMS key policies, Secrets Manager resource policies, SQS queue policies, Lambda resource policies, and IAM role trust policies all grant cross-account access independently, and each one is a place where "just add my account for testing" silently becomes permanent. IAM Access Analyzer exists to close that gap by continuously reasoning over every resource-based policy in an account or organization and flagging any that grant access to a principal outside a defined "zone of trust."
 
 What makes Access Analyzer different from a linter is that it uses automated reasoning (a form of formal, mathematical logic verification built on Zelkova, the same engine behind AWS's policy validation tooling) rather than pattern matching. It doesn't just look for `"Principal": "*"` — it actually evaluates the full policy, including conditions, to determine whether an external principal could genuinely access the resource under any circumstance. This means it correctly ignores a wildcard principal that's locked down by an `aws:SourceArn` condition, and correctly flags a policy that looks safe on the surface but has a logic hole in a `NotPrincipal` clause.
 
@@ -19,30 +19,30 @@ The other half of Access Analyzer — the "custom policy checks" and "unused acc
 ## 🏗️ Architecture Snapshot
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │                     AWS Organization                              │
 │                                                                    │
-│  ┌────────────────────────┐        ┌─────────────────────────┐    │
+│  ┌────────────────────┐        ┌───────────────────────┐    │
 │  │   Security/Audit        │        │   Member Account (Prod)  │    │
 │  │   Account                │        │                          │    │
 │  │                          │        │  ┌────────────────────┐  │    │
-│  │  ┌────────────────────┐  │        │  │ S3 Bucket Policy    │  │    │
+│  │  ┌──────────────────┐  │        │  │ S3 Bucket Policy    │  │    │
 │  │  │ Access Analyzer     │◀─┼────────┼──│ Principal: acct-999 │  │    │
 │  │  │ (Organization scope)│  │ scans  │  └────────────────────┘  │    │
-│  │  └─────────┬──────────┘  │        │  ┌────────────────────┐  │    │
+│  │  └─────────┬────────┘  │        │  ┌────────────────────┐  │    │
 │  │            │              │        │  │ IAM Role Trust      │  │    │
 │  │            ▼              │        │  │ Policy (external)   │  │    │
-│  │  ┌────────────────────┐  │        │  └────────────────────┘  │    │
+│  │  ┌──────────────────┐  │        │  └────────────────────┘  │    │
 │  │  │ Findings:           │  │        │  ┌────────────────────┐  │    │
 │  │  │ - External access   │  │        │  │ KMS Key Policy       │  │    │
 │  │  │ - Unused access      │  │        │  └────────────────────┘  │    │
-│  │  └─────────┬──────────┘  │        └─────────────────────────┘    │
+│  │  └─────────┬────────┘  │        └─────────────────────┐    │
 │  │            │              │                                       │
 │  │            ▼              │                                       │
 │  │  EventBridge → SNS/Slack   │                                       │
 │  │  (findings notification)   │                                       │
-│  └────────────────────────┘                                       │
-└──────────────────────────────────────────────────────────────────┘
+│  └────────────────────┘                                       │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
