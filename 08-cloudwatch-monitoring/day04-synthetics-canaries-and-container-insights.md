@@ -10,27 +10,27 @@ Most CloudWatch alarms are reactive — they fire once a real user has already h
 
 Container Insights solves the parallel problem for containerized workloads: standard CloudWatch metrics tell you node-level CPU and memory, but they don't natively understand what "a pod" or "a Kubernetes namespace" is. Container Insights (backed by the CloudWatch agent or, more recently, an OpenTelemetry-based collector) enriches metrics with Kubernetes/ECS-aware dimensions — namespace, pod, service, task — so you can actually answer "which namespace is eating all the memory on this node" instead of staring at an aggregate node metric with no way to attribute it. For an EKS migration, this is usually the single tool that turns "the cluster feels slow" into "namespace X's pod Y has a memory leak" in one dashboard.
 
-Together, canaries and Container Insights close the loop between "did something break" (synthetic, proactive) and "why did it break, specifically" (Container Insights, diagnostic) — which is exactly the pairing a ProServe engagement needs to hand a customer a genuinely operable observability stack instead of a wall of raw CloudWatch metrics nobody knows how to read.
+Together, canaries and Container Insights close the loop between "did something break" (synthetic, proactive) and "why did it break, specifically" (Container Insights, diagnostic) — which is exactly the pairing a consulting engagement needs to hand a customer a genuinely operable observability stack instead of a wall of raw CloudWatch metrics nobody knows how to read.
 
 ---
 
 ## 🏗️ Architecture Snapshot
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────┐
 │  CloudWatch Synthetics                                           │
 │                                                                    │
 │  Scheduled Canary (every 5 min)                                   │
-│  ┌──────────────────────┐                                            │
+│  ┌───────────────────┐                                            │
 │  │ Headless browser     │ ──▶ Login → Add to cart → Checkout        │
 │  │ script (Puppeteer)   │      (simulates real user journey)         │
-│  └───────────┬─────────┘                                            │
+│  └───────────┬───────┐                                            │
 │             │                                                       │
 │             ▼                                                       │
 │   CloudWatch Alarm (on canary failure) ──▶ SNS ──▶ PagerDuty/Slack   │
-└──────────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 
-┌────────────────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────┐
 │  Container Insights                                                │
 │                                                                     │
 │  EKS Node ──▶ CloudWatch Agent / OTel Collector ──▶ enriched metrics│
@@ -40,7 +40,7 @@ Together, canaries and Container Insights close the loop between "did something 
 │                            ▼                                        │
 │              CloudWatch Container Insights Dashboard                │
 │              (per-namespace CPU/memory, pod restarts)               │
-└───────────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────┐
 ```
 
 ---
