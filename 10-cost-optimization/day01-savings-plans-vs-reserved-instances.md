@@ -12,7 +12,7 @@ There are three Savings Plan types: **Compute Savings Plans** (most flexible —
 
 The right strategy depends on your workload stability: for a microservices EKS cluster where instance types change as you rightsize, Compute Savings Plans are better. For a stable, well-understood fleet that's been running the same instance type for 2+ years (SAP, Oracle, legacy apps), Standard Reserved Instances at 3 years get you the maximum discount.
 
-Spot Instances sit in a separate category — up to 90% discount, but instances can be interrupted with 2 minutes notice. For EKS worker nodes running fault-tolerant, stateless microservices, a mixed node group (On-Demand base + Spot workers via Karpenter) is the cost-optimal pattern. A common ProServe recommendation is 20% On-Demand (base capacity, Savings Plan coverage) + 80% Spot (burstable, Karpenter-managed).
+Spot Instances sit in a separate category — up to 90% discount, but instances can be interrupted with 2 minutes notice. For EKS worker nodes running fault-tolerant, stateless microservices, a mixed node group (On-Demand base + Spot workers via Karpenter) is the cost-optimal pattern. A common consulting recommendation is 20% On-Demand (base capacity, Savings Plan coverage) + 80% Spot (burstable, Karpenter-managed).
 
 ---
 
@@ -20,12 +20,12 @@ Spot Instances sit in a separate category — up to 90% discount, but instances 
 
 ```
   Cost Optimization Strategy — Coverage Layers
-  ─────────────────────────────────────────────────────
+  ─────────────────────────────────────────
 
   EC2 / EKS Compute Spend:
-  ┌─────────────────────────────────────────────────┐
+  ┌─────────────────────────────────────────┐
   │                                                 │
-  │  ████████████████████  Compute Savings Plans    │
+  │  ██████████████████████  Compute Savings Plans    │
   │  (covers 60-70% of steady-state base usage)     │
   │                                                 │
   │  ██████████████        EC2 Ins. Savings Plans   │
@@ -37,17 +37,17 @@ Spot Instances sit in a separate category — up to 90% discount, but instances 
   │  ██                   On-Demand                 │
   │  (emergency headroom, unpredictable peaks)      │
   │                                                 │
-  └─────────────────────────────────────────────────┘
+  └─────────────────────────────────────────┘
 
   Savings Plan Coverage Model:
-  ┌────────────────────────────────────────────────────┐
+  ┌─────────────────────────────────────────────┐
   │ Commitment: $X/hour for 1 or 3 years               │
   │                                                    │
   │ Your usage:  EC2 (any type) + Lambda + Fargate     │
   │              ←────── Savings Plan covers ────────→ │
   │                                                    │
   │ Overage:     On-Demand rates                       │
-  └────────────────────────────────────────────────────┘
+  └─────────────────────────────────────────────┘
 ```
 
 ---
@@ -148,7 +148,7 @@ aws budgets create-budget \
       "Threshold": 80,
       "ThresholdType": "PERCENTAGE"
     },
-    "Subscribers": [{"SubscriptionType": "EMAIL", "Address": "naveenramasamy11@gmail.com"}]
+    "Subscribers": [{"SubscriptionType": "EMAIL", "Address": "billing-alerts@example.com"}]
   }]'
 ```
 
