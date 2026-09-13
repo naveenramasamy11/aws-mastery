@@ -10,7 +10,7 @@
 
 A Permission Boundary is a managed IAM policy attached to a role or user that sets the *maximum* permissions that entity can ever have — regardless of what identity-based policies are attached. Think of it as a ceiling. If the boundary doesn't allow `s3:DeleteBucket`, the identity can't delete buckets even if every inline and managed policy in the account says it can.
 
-This is the single most powerful feature for **safe delegation**. In a ProServe or platform-engineering context, you want to let dev teams create their own IAM roles without being able to escalate to full admin. Without permission boundaries, a developer who can `iam:CreateRole` + `iam:AttachRolePolicy` can trivially create an `AdministratorAccess` role and assume it. With a boundary that caps at, say, `s3:*` and `ec2:*`, that escalation path is gone.
+This is the single most powerful feature for **safe delegation**. In a consulting or platform-engineering context, you want to let dev teams create their own IAM roles without being able to escalate to full admin. Without permission boundaries, a developer who can `iam:CreateRole` + `iam:AttachRolePolicy` can trivially create an `AdministratorAccess` role and assume it. With a boundary that caps at, say, `s3:*` and `ec2:*`, that escalation path is gone.
 
 The effective permissions of a principal are always the **intersection** of:
 1. Identity-based policies
@@ -32,23 +32,23 @@ The IAM condition key `aws:PrincipalTag/<key>` gives you the tag on the caller. 
 
 ```
 IAM Effective Permission Evaluation
-────────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────────
 
   Developer Role
-  ┌─────────────────────────────────────────────────────────┐
+  ┌──────────────────────────────────────────────────────────┐
   │  Identity Policy: Allow s3:*, ec2:*, iam:CreateRole    │
   │  Permission Boundary: Allow s3:*, ec2:* only           │
   │                                                         │
   │  Effective = INTERSECTION                               │
   │  → s3:* ✅  ec2:* ✅  iam:CreateRole ❌               │
-  └─────────────────────────────────────────────────────────┘
+  └──────────────────────────────────────────────────────────┘
 
   ABAC Tag-Based Access
-  ┌──────────────────────┐      ┌─────────────────────────┐
+  ┌──────────────────┐      ┌─────────────────────┐
   │  Principal (Role)    │      │  Resource (EC2/S3/RDS)  │
   │  Tag: Team=payments  │─────▶│  Tag: Team=payments     │
   │  Tag: Env=prod       │      │  Tag: Env=prod          │
-  └──────────────────────┘      └─────────────────────────┘
+  └──────────────────┘      └─────────────────────┘
            │
            ▼
   Policy Condition:
@@ -58,10 +58,10 @@ IAM Effective Permission Evaluation
            ▼
         ✅ ALLOW — same team, same env
 
-  ┌──────────────────────┐      ┌─────────────────────────┐
+  ┌──────────────────┐      ┌─────────────────────┐
   │  Principal           │      │  Resource               │
   │  Tag: Team=payments  │─────▶│  Tag: Team=platform     │
-  └──────────────────────┘      └─────────────────────────┘
+  └──────────────────┘      └─────────────────────┘
            │
            ▼
         ❌ DENY — different team tag
