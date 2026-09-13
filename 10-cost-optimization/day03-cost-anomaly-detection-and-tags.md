@@ -8,7 +8,7 @@
 
 Most cost-optimization conversations focus on the known knobs: Savings Plans, Spot, rightsizing. But the bill events that actually cause panic — a misconfigured Lambda in an infinite retry loop, a forgotten NAT Gateway processing terabytes, a runaway data transfer bill from a misrouted replication job — aren't about picking the wrong pricing model, they're about something going quietly, expensively wrong. AWS Cost Anomaly Detection uses machine learning against your historical spend patterns per service, account, or cost-allocation-tag dimension, and alerts you when spend deviates meaningfully from what the model expects — catching the "why did our bill triple overnight" problem in hours instead of at the end of the billing cycle.
 
-The other half of cost visibility that's easy to underinvest in is Cost Allocation Tags. Without consistent tagging (`Environment`, `Team`, `Project`, `CostCenter`), Cost Explorer and anomaly detection can tell you *what service* got expensive, but not *whose* workload it was or *which team* to route the alert to. On ProServe engagements, the single highest-leverage FinOps activity is almost never a Savings Plan purchase — it's enforcing tag policies at the Organizations level so every resource is attributable to a team from day one, because retrofitting tags onto years of untagged resources is a much bigger project than tagging correctly from the start.
+The other half of cost visibility that's easy to underinvest in is Cost Allocation Tags. Without consistent tagging (`Environment`, `Team`, `Project`, `CostCenter`), Cost Explorer and anomaly detection can tell you *what service* got expensive, but not *whose* workload it was or *which team* to route the alert to. On consulting engagements, the single highest-leverage FinOps activity is almost never a Savings Plan purchase — it's enforcing tag policies at the Organizations level so every resource is attributable to a team from day one, because retrofitting tags onto years of untagged resources is a much bigger project than tagging correctly from the start.
 
 Anomaly Detection monitors work at the granularity you configure: a monitor scoped to `AWS Service` catches "EC2 spend spiked," while a monitor scoped to a `Cost Allocation Tag` value catches "the `team:data-platform` tag's spend spiked," which is the more actionable signal for actually routing the alert to the right people.
 
@@ -17,22 +17,22 @@ Anomaly Detection monitors work at the granularity you configure: a monitor scop
 ## 🏗️ Architecture Snapshot
 
 ```
-┌────────────────────────────────────────────┐
+┌──────────────────────────────────┐
 │         AWS Cost & Usage Data             │
 │   (tagged by Environment/Team/Project)    │
-└────────────────────┬───────────────────────────┘
+└────────────────────┬───────────────────┐
                      │
-        ┌────────────▼────────────┐
+        ┌────────────▼───────────┐
         │  Cost Anomaly Detection   │
         │  ML model per monitor     │
         │  dimension (service/tag)  │
-        └────────────┬─────────────┘
+        └────────────┬───────────┘
                       │ deviation detected
-        ┌─────────────▼─────────────┐
+        ┌─────────────▼───────────┐
         │   SNS Topic / Email/Slack  │
         │   Alert with root-cause    │
         │   service breakdown        │
-        └───────────────────────────────┘
+        └─────────────────────────────┘
 
 Cost Allocation Tags flow:
 Resource created → Tagged (Team=data-platform) → Cost Explorer / Anomaly
