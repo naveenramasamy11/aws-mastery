@@ -12,7 +12,7 @@ An IAM policy is JSON with five key components: `Version`, `Statement`, `Effect`
 
 The evaluation order is: **Explicit Deny wins always → Service Control Policies (SCPs) → Permission Boundaries → Resource-based policies → Identity-based policies → Session policies**. If no explicit Allow is found at the end of this chain, the result is an implicit Deny. This is why "my role has AdministratorAccess but it still can't do X" is almost always an SCP or Permission Boundary problem — not an IAM bug.
 
-In ProServe migrations, IAM is often the last thing teams think about and the first thing that breaks. When migrating 150+ microservices into EKS, every pod's service account needs the right IRSA role, and getting that wrong means silent failures at runtime — not helpful build errors at deploy time.
+In large-scale migrations, IAM is often the last thing teams think about and the first thing that breaks. When migrating 150+ microservices into EKS, every pod's service account needs the right IRSA role, and getting that wrong means silent failures at runtime — not helpful build errors at deploy time.
 
 ---
 
@@ -20,32 +20,32 @@ In ProServe migrations, IAM is often the last thing teams think about and the fi
 
 ```
   IAM Policy Evaluation — Order of Operations
-  ─────────────────────────────────────────────
+  ─────────────────────────────────────
 
   API Request arrives
         │
         ▼
-  ┌─────────────────────┐
-  │  Explicit DENY?     │──YES──▶ DENY (game over)
-  └──────────┬──────────┘
+  ┌─────────────────┐
+  │  Explicit DENY?     │──YES─▶ DENY (game over)
+  └─────────┬─────────┘
              │ NO
              ▼
-  ┌─────────────────────┐
+  ┌─────────────────┐
   │  SCP allows it?     │──NO───▶ DENY
-  └──────────┬──────────┘
+  └─────────┬─────────┘
              │ YES
              ▼
-  ┌─────────────────────┐
+  ┌─────────────────┐
   │ Permission Boundary │──NO───▶ DENY
   │    allows it?       │
-  └──────────┬──────────┘
+  └─────────┬─────────┘
              │ YES
              ▼
-  ┌─────────────────────┐
+  ┌─────────────────┐
   │  Resource policy    │
   │  + Identity policy  │──NO───▶ DENY (implicit)
   │  has Allow?         │
-  └──────────┬──────────┘
+  └─────────┬─────────┘
              │ YES
              ▼
            ALLOW ✅
