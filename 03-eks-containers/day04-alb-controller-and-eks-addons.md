@@ -10,33 +10,33 @@ Every EKS cluster ships with a handful of components that aren't optional even t
 
 The AWS Load Balancer Controller (ALB/NLB Controller) is the piece that turns Kubernetes Ingress and Service objects into real Application Load Balancers and Network Load Balancers. Before this controller existed, exposing a Kubernetes service externally on AWS meant either a classic ELB with poor Kubernetes-native features, or hand-managing target groups outside the cluster. The controller watches Ingress/Service resources and reconciles them into ALB/NLB target groups automatically, including IP-mode target registration (pods register directly, bypassing the extra NodePort hop) which meaningfully cuts latency for high-throughput services.
 
-In migration work, this combination — managed add-ons plus the LB controller — is what separates an EKS cluster that a customer can operate themselves from one that requires a phone call to ProServe every time there's a networking hiccup. Getting IRSA (IAM Roles for Service Accounts) wired correctly for the LB controller's IAM permissions is usually the single trickiest step in a first EKS deployment, and getting it wrong produces a controller pod that starts fine but silently fails to reconcile any Ingress — a classic "working as intended, doing nothing" failure mode.
+In migration work, this combination — managed add-ons plus the LB controller — is what separates an EKS cluster that a customer can operate themselves from one that requires a phone call to the platform team every time there's a networking hiccup. Getting IRSA (IAM Roles for Service Accounts) wired correctly for the LB controller's IAM permissions is usually the single trickiest step in a first EKS deployment, and getting it wrong produces a controller pod that starts fine but silently fails to reconcile any Ingress — a classic "working as intended, doing nothing" failure mode.
 
 ---
 
 ## 🏗️ Architecture Snapshot
 
 ```
-┌──────────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────┐
 │  EKS Cluster                                                   │
 │                                                                  │
 │  kube-system namespace                                          │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐  │
+│  ┌───────────┐ ┌───────────┐ ┌─────────────────────┐  │
 │  │ VPC CNI      │ │ CoreDNS      │ │ AWS LB Controller        │  │
 │  │ (addon)      │ │ (addon)      │ │ (Helm/addon, uses IRSA)  │  │
-│  └─────────────┘ └─────────────┘ └───────────┬─────────────┘  │
+│  └───────────┘ └───────────┘ └───────────┬───────────┘  │
 │                                                │ watches         │
 │                                                ▼                 │
-│                                  ┌───────────────────────────┐  │
+│                                  ┌─────────────────────────┐  │
 │                                  │ Ingress / Service (LB type)│  │
-│                                  └─────────────┬─────────────┘  │
+│                                  └─────────────┬─────────┘  │
 │                                                │ reconciles       │
-└────────────────────────────────────────────────┼─────────────────┘
+└───────────────────────────────────────┼─────────────┘
                                                    ▼
-                                     ┌─────────────────────────┐
+                                     ┌───────────────────┐
                                      │  Application Load        │
                                      │  Balancer (target: pods) │
-                                     └─────────────────────────┘
+                                     └───────────────────┘
 ```
 
 ---
