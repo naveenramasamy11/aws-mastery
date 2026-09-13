@@ -10,7 +10,7 @@ On more than one migration engagement, the moment of truth wasn't designing the 
 
 AWS Network Firewall sits at a different layer entirely — it's a stateful, deep-packet-inspection firewall you deploy at the VPC boundary (typically in a dedicated subnet behind a Gateway Load Balancer or as a Transit Gateway attachment) to enforce domain-based and signature-based rules that Security Groups simply can't express: blocking outbound traffic to known malicious domains, restricting egress to an explicit allow-list of external APIs, or inspecting east-west traffic between VPCs in a hub-and-spoke topology. Where a Security Group can only reason about IP/port, Network Firewall can reason about domain names, TLS SNI, and Suricata-compatible IDS/IPS rules.
 
-On one ProServe engagement moving a customer off a legacy on-prem firewall appliance during an EKS migration, we replaced perimeter domain-filtering entirely with Network Firewall rule groups, then used Flow Logs on the EKS worker node subnets to validate, before cutover, that nothing outside the approved domain list was actually being used in production — turning a risky "trust the migration" moment into a data-backed one.
+On one migration engagement moving a customer off a legacy on-prem firewall appliance during an EKS migration, we replaced perimeter domain-filtering entirely with Network Firewall rule groups, then used Flow Logs on the EKS worker node subnets to validate, before cutover, that nothing outside the approved domain list was actually being used in production — turning a risky "trust the migration" moment into a data-backed one.
 
 ---
 
@@ -23,25 +23,25 @@ On one ProServe engagement moving a customer off a legacy on-prem firewall appli
               │  Internet Gateway  │
               └──────────┬──────────┘
                          │
-              ┌──────────▼───────────────────┐
+              ┌──────────▼─────────────────┐
               │  Firewall Subnet            │
-              │  ┌────────────────────────┐ │
+              │  ┌───────────────────────┐ │
               │  │  AWS Network Firewall   │ │  ← domain filtering,
               │  │  (stateful rule groups) │ │    Suricata IDS/IPS
-              │  └──────────────────────────┘ │
-              └──────────┬────────────────────┘
+              │  └────────────────────┐ │
+              └──────────▼──────────────────┘
                          │
               ┌──────────▼──────────┐
               │  NAT Gateway        │
               └──────────┬──────────┘
                          │
-        ┌────────────────┼──────────────────┐
+        ┌──────────────┼───────────────┐
         ▼                                  ▼
-┌───────────────┐                 ┌───────────────┐
+┌─────────────┐                 ┌───────────┐
 │ Private Subnet │                 │ Private Subnet │
 │ EKS Node Group │                 │ RDS Instance   │
 │  [Flow Logs]───┼──▶ CloudWatch   │  [Flow Logs]───┼──▶ S3 (Athena queries)
-└───────────────┘    Logs Insights └───────────────┘
+└─────────────┘    Logs Insights └─────────────┘
 ```
 
 ---
