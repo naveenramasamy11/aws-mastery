@@ -10,7 +10,7 @@ AWS Application Migration Service (MGN), formerly CloudEndure Migration, is AWS'
 
 The MGN workflow has four phases: **Install** (deploy the replication agent on source servers), **Replicate** (continuous block-level sync to staging area in AWS), **Test** (launch test instances, validate application behavior without interrupting source), **Cutover** (launch production instances, finalize replication, decommission source). The staging area uses low-cost EC2 instances and EBS volumes — you only pay for full-sized target instances during test and cutover windows.
 
-Migration waves are how you organize which servers to cut over together. A typical ProServe engagement groups servers by application dependency — all servers in a microservice group cut over in the same wave. Wave planning is where most migration projects fail: cutting over a database before its application, or an application before its load balancer, causes outages.
+Migration waves are how you organize which servers to cut over together. A typical migration engagement groups servers by application dependency — all servers in a microservice group cut over in the same wave. Wave planning is where most migration projects fail: cutting over a database before its application, or an application before its load balancer, causes outages.
 
 For the 7 Rs of migration (Retire, Retain, Rehost, Replatform, Repurchase, Refactor, Relocate), MGN handles Rehost. For Replatform, you typically use MGN to get to AWS first, then optimize (switch to RDS, enable EKS, etc.) after the initial migration. "Lift, then shift the lift" is a common real-world pattern.
 
@@ -20,31 +20,31 @@ For the 7 Rs of migration (Retire, Retain, Rehost, Replatform, Repurchase, Refac
 
 ```
   AWS MGN Migration Architecture
-  ─────────────────────────────────────────────────────────
+  ─────────────────────────────────────────────────
 
   SOURCE ENVIRONMENT              AWS TARGET ENVIRONMENT
   (On-Premises / Other Cloud)
 
-  ┌─────────────────────┐         ┌───────────────────────────┐
+  ┌─────────────────┐         ┌─────────────────────────┐
   │  Source Server      │         │  AWS Account               │
   │  (Any OS/workload)  │         │                           │
-  │  ┌───────────────┐  │  TCP    │  ┌────────────────────┐   │
-  │  │ MGN Repl.     │──┼──1500──▶│  │ Replication Server │   │
+  │  ┌─────────────┐  │  TCP    │  ┌────────────────┐   │
+  │  │ MGN Repl.     │──┼──1500─▶│  │ Replication Server │   │
   │  │ Agent         │  │ (443)   │  │ (staging area)     │   │
-  │  └───────────────┘  │         │  └─────────┬──────────┘   │
-  └─────────────────────┘         │            │               │
-                                  │  ┌─────────▼──────────┐   │
+  │  └─────────────┘  │         │  └─────────┬────────┘   │
+  └─────────────────┘         │            │               │
+                                  │  ┌─────────▼────────┐   │
                                   │  │ EBS Staging Volumes│   │
                                   │  │ (compressed, enc.) │   │
-                                  │  └─────────┬──────────┘   │
+                                  │  └─────────┬────────┘   │
                                   │            │               │
                                   │  Test / Cutover:           │
-                                  │  ┌─────────▼──────────┐   │
+                                  │  ┌─────────▼────────┐   │
                                   │  │ Target EC2 Instance │   │
                                   │  │ (converted to AWS  │   │
                                   │  │  drivers/boot)     │   │
-                                  │  └────────────────────┘   │
-                                  └───────────────────────────┘
+                                  │  └───────────────┘   │
+                                  └───────────────────────┘
 
   MGN Phases:
   [Install Agent] → [Replication] → [Testing] → [Cutover] → [Decommission]
