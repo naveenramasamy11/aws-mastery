@@ -10,7 +10,7 @@ On every EKS migration I've run, the moment Cluster Autoscaler stops being enoug
 
 The core objects are `NodePool` (what kinds of nodes are allowed — instance families, zones, capacity type) and `EC2NodeClass` (the AWS-specific details — AMI, subnets, security groups, IAM role). Karpenter uses a bin-packing algorithm that considers actual pod resource requests, not just node counts, which is why a well-tuned Karpenter setup routinely runs 20-30% cheaper than an equivalent Cluster Autoscaler + fixed node group setup on the same workload — it isn't rounding up to the next node group size, it's picking the instance that fits.
 
-The other structural win for ProServe migration work: Karpenter's **consolidation** feature continuously looks for cheaper ways to run the current pod set and proactively replaces nodes — draining and terminating an underutilized `m5.2xlarge` in favor of two `m5.large` instances if that's cheaper, without anyone opening a ticket. Combined with Spot interruption handling built directly into the controller, this is the autoscaler I now default to on any EKS workload that isn't tightly latency-bound to specific pinned node shapes.
+The other structural win for large-scale migration work: Karpenter's **consolidation** feature continuously looks for cheaper ways to run the current pod set and proactively replaces nodes — draining and terminating an underutilized `m5.2xlarge` in favor of two `m5.large` instances if that's cheaper, without anyone opening a ticket. Combined with Spot interruption handling built directly into the controller, this is the autoscaler I now default to on any EKS workload that isn't tightly latency-bound to specific pinned node shapes.
 
 ---
 
@@ -20,32 +20,32 @@ The other structural win for ProServe migration work: Karpenter's **consolidatio
                     Unschedulable Pod
                           │
                           ▼
-              ┌───────────────────────┐
+              ┌───────────────────┐
               │   Karpenter Controller │
               │   (watches API server) │
-              └───────────┬────────────┘
+              └───────────┬──────────┘
                           │ evaluates
                           ▼
-       ┌──────────────────────────────────┐
+       ┌──────────────────────────────┐
        │  NodePool: general-purpose        │
        │  - instance families: m,c,r       │
        │  - capacity type: spot > on-demand│
        │  - zones: ap-south-1a/1b/1c       │
-       └──────────────┬─────────────────────┘
+       └──────────────┬─────────────┘
                           │ references
                           ▼
-       ┌──────────────────────────────────┐
+       ┌──────────────────────────────┐
        │  EC2NodeClass                    │
        │  - AMI family: AL2023             │
        │  - subnetSelector, sgSelector     │
        │  - instanceProfile (IAM)          │
-       └──────────────┬─────────────────────┘
+       └──────────────┬─────────────┘
                           │ provisions
                           ▼
-              ┌───────────────────────┐
+              ┌───────────────────┐
               │  Right-sized EC2 node  │
               │  joins cluster in <60s │
-              └───────────────────────┘
+              └───────────────────┘
 
 Consolidation loop: continuously replaces nodes with cheaper-fit alternatives.
 ```
