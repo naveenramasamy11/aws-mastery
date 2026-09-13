@@ -6,7 +6,7 @@
 
 ## 📖 Concept
 
-Every ProServe engagement that touches multi-account landing zones eventually runs into the same question from a customer's security team: "How do we stop anyone — including account admins — from disabling CloudTrail, leaving approved regions, or spinning up unencrypted resources?" IAM policies can't answer that fully, because IAM policies live *inside* an account and a sufficiently privileged principal (or the root user) can always rewrite them. Service Control Policies (SCPs) live one layer up, at the AWS Organizations level, and set the maximum available permissions for every principal in an account — including its root user. They are a permission *ceiling*, never a grant.
+Every enterprise engagement that touches multi-account landing zones eventually runs into the same question from a customer's security team: "How do we stop anyone — including account admins — from disabling CloudTrail, leaving approved regions, or spinning up unencrypted resources?" IAM policies can't answer that fully, because IAM policies live *inside* an account and a sufficiently privileged principal (or the root user) can always rewrite them. Service Control Policies (SCPs) live one layer up, at the AWS Organizations level, and set the maximum available permissions for every principal in an account — including its root user. They are a permission *ceiling*, never a grant.
 
 The mental model that finally makes SCPs click: an action is only allowed if it passes through **every** applicable policy layer — SCPs at the Org root, SCPs at each OU level down to the account, the account's own IAM policies, permission boundaries, and resource policies. If any layer denies it (explicitly or by omission for SCPs, since SCPs default to implicit deny once attached), the action fails. SCPs never grant permissions by themselves; attaching an SCP that "allows" S3 does nothing useful unless IAM inside the account also allows S3.
 
@@ -18,10 +18,10 @@ In practice, SCPs are how you encode non-negotiable guardrails at scale: region 
 
 ```
                      AWS Organizations
-                     ┌─────────────────────────────┐
+                     ┌────────────────────────────┐
                      │   Root OU                    │
                      │   SCP: DenyLeaveOrganization  │
-                     └──────────────┬───────────────┘
+                     └──────────────┬─────────────┘
                                     │
           ┌─────────────────────────┼─────────────────────────┐
           │                         │                         │
@@ -34,7 +34,7 @@ In practice, SCPs are how you encode non-negotiable guardrails at scale: region 
    ┌──────▼──────┐          ┌───────▼───────┐         ┌───────▼───────┐
    │ Log Archive │          │  Prod Account │         │ Dev Account   │
    │ Account     │          │  IAM: eks-node-role  │  │ IAM: dev-role │
-   └─────────────┘          └───────────────┘         └───────────────┘
+   └────────────┘          └─────────────┘         └─────────────┘
 
 Effective permission = SCP(root) ∩ SCP(OU) ∩ SCP(account) ∩ IAM policy ∩ boundary
 ```
