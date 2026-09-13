@@ -10,7 +10,7 @@ Every migration plan eventually runs the math: at a given available bandwidth, h
 
 AWS DataSync solves an adjacent but different problem: ongoing or one-time online data transfer between on-premises storage (NFS, SMB, or an on-prem object store) and S3/EFS/FSx, with built-in verification, incremental sync, and bandwidth throttling — the kind of transfer that's large but not truck-large, and where you want the actual online path to be efficient rather than requiring physical hardware. DataSync agents run on-prem as a VM and only transfer changed data on subsequent syncs, which is what makes it viable for pre-cutover data validation runs during a migration, not just a single one-shot copy.
 
-The decision framework I use on ProServe engagements: DataSync for anything under roughly 100TB with adequate bandwidth and where incremental resync matters before cutover; Snowball Edge for larger one-time transfers or environments with limited/unreliable connectivity; Snowmobile only for truly exabyte-scale data center migrations, which in practice is rare outside the largest enterprise engagements.
+The decision framework I use on migration engagements: DataSync for anything under roughly 100TB with adequate bandwidth and where incremental resync matters before cutover; Snowball Edge for larger one-time transfers or environments with limited/unreliable connectivity; Snowmobile only for truly exabyte-scale data center migrations, which in practice is rare outside the largest enterprise engagements.
 
 ---
 
@@ -18,17 +18,17 @@ The decision framework I use on ProServe engagements: DataSync for anything unde
 
 ```
 DataSync (online, incremental):
-┌─────────────────┐   NFS/SMB    ┌──────────────────┐   Encrypted   ┌─────────────┐
-│  On-prem storage │──────────────▶│  DataSync Agent   │───────────────▶│  S3 / EFS / │
+┌───────────────┐   NFS/SMB    ┌──────────────────┐   Encrypted   ┌─────────────┐
+│  On-prem storage │────────────▶│  DataSync Agent   │─────────────▶│  S3 / EFS / │
 │                  │              │  (on-prem VM)      │   transfer    │  FSx        │
-└─────────────────┘              └──────────────────┘               └─────────────┘
+└───────────────┘              └──────────────────┘               └─────────────┘
                                     Incremental, verified, throttled
 
 Snow Family (offline, bulk):
-┌─────────────────┐   Ship device  ┌──────────────────┐   Ingest at    ┌─────────────┐
-│  On-prem data    │────────────────▶│  Snowball Edge /  │────────────────▶│  S3         │
+┌───────────────┐   Ship device  ┌──────────────────┐   Ingest at    ┌─────────────┐
+│  On-prem data    │──────────────▶│  Snowball Edge /  │──────────────▶│  S3         │
 │  center          │   (physically) │  Snowmobile        │   AWS DC       │             │
-└─────────────────┘                └──────────────────┘                └─────────────┘
+└───────────────┘                └──────────────────┘                └─────────────┘
                                     Encrypted at rest with KMS during transit
 ```
 
