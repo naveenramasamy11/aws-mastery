@@ -12,7 +12,7 @@ The core of AWS Transform is automated code conversion powered by generative AI 
 
 The Transform engagement model is typically a **RAPID Assessment** first — a 2-4 week analysis of the source environment that produces a modernization roadmap, complexity scoring per application, and an estimated LOE (Level of Effort). For mainframe, this involves scanning COBOL source libraries, JCL, and data definitions. For VMware, it's discovery of vSphere clusters, VM inventory, and dependency mapping.
 
-In ProServe engagements, AWS Transform is positioned as the third option alongside manual refactoring (expensive, slow) and lift-and-shift via MGN (fast but doesn't modernize). Transform occupies the middle ground: automated code conversion at a fraction of the manual cost, producing cloud-native output rather than just rehosted legacy code.
+In enterprise migration engagements, AWS Transform is positioned as the third option alongside manual refactoring (expensive, slow) and lift-and-shift via MGN (fast but doesn't modernize). Transform occupies the middle ground: automated code conversion at a fraction of the manual cost, producing cloud-native output rather than just rehosted legacy code.
 
 ---
 
@@ -20,32 +20,32 @@ In ProServe engagements, AWS Transform is positioned as the third option alongsi
 
 ```
   AWS Transform — Modernization Pathways
-  ──────────────────────────────────────────────────────
+  ────────────────────────────────────────────
 
   Mainframe Modernization:
-  ┌────────────────────┐     Transform      ┌─────────────────────┐
-  │  Legacy Mainframe  │  ──────────────▶   │  AWS Cloud Native   │
+  ┌─────────────────┐     Transform      ┌─────────────────┐
+  │  Legacy Mainframe  │  ────────────▶   │  AWS Cloud Native   │
   │  - COBOL/PL1 code  │  AI-powered        │  - Java on EC2      │
   │  - JCL batch jobs  │  code conversion   │  - Lambda functions │
   │  - DB2 / VSAM      │                    │  - Aurora/DynamoDB  │
   │  - CICS online     │                    │  - Step Functions   │
-  └────────────────────┘                    └─────────────────────┘
+  └─────────────────┘                    └─────────────────┘
 
   VMware Migration:
-  ┌────────────────────┐     Transform      ┌─────────────────────┐
-  │  VMware vSphere    │  ──────────────▶   │  AWS EC2            │
+  ┌─────────────────┐     Transform      ┌─────────────────┐
+  │  VMware vSphere    │  ────────────▶   │  AWS EC2            │
   │  - VMs (any OS)    │  Automated         │  - EC2 instances    │
   │  - vCenter mgmt    │  conversion        │  - EBS volumes      │
   │  - vSAN storage    │                    │  - EKS (optional)   │
-  └────────────────────┘                    └─────────────────────┘
+  └─────────────────┘                    └─────────────────┘
 
   Windows to Linux:
-  ┌────────────────────┐     Transform      ┌─────────────────────┐
-  │  Windows Workload  │  ──────────────▶   │  Linux on AWS       │
+  ┌─────────────────┐     Transform      ┌─────────────────┐
+  │  Windows Workload  │  ────────────▶   │  Linux on AWS       │
   │  - .NET Framework  │  Code analysis     │  - .NET on Linux    │
   │  - SQL Server      │  + conversion      │  - Aurora PostgreSQL│
   │  - IIS             │                    │  - Nginx/ALB        │
-  └────────────────────┘                    └─────────────────────┘
+  └─────────────────┘                    └─────────────────┘
 
   RAPID Assessment Flow:
   [Discover] → [Analyze] → [Score complexity] → [Roadmap] → [Pilot]
